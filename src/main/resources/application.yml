@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: architecture-diagram-generator
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    root: INFO
+    com.architecture.diagram: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+app:
+  plantuml:
+    output-format: png
+    graphviz-path: /usr/bin/dot

@@ -1,0 +1,118 @@
+system:
+  name: "E-Commerce Platform"
+  description: "Complete e-commerce system with microservices"
+  
+  components:
+    - id: clients
+      type: external
+      label: "Web & Mobile Clients"
+      color: "#E8F4F8"
+    
+    - id: api_gateway
+      type: layer
+      label: "API Gateway"
+      color: "#D4E6F1"
+    
+    - id: auth_service
+      type: security
+      label: "Authentication Service"
+      color: "#F8D7DA"
+    
+    - id: product_service
+      type: processing
+      label: "Product Service"
+      color: "#D1ECF1"
+    
+    - id: order_service
+      type: processing
+      label: "Order Service"
+      color: "#D1ECF1"
+    
+    - id: payment_service
+      type: processing
+      label: "Payment Service"
+      color: "#D1ECF1"
+    
+    - id: cache
+      type: data_access
+      label: "Redis Cache"
+      color: "#E7D4F5"
+    
+    - id: product_db
+      type: database
+      label: "Product Database"
+      color: "#FDFFB6"
+    
+    - id: order_db
+      type: database
+      label: "Order Database"
+      color: "#FDFFB6"
+    
+    - id: external_payment
+      type: external
+      label: "External Payment Gateway"
+      color: "#E8F4F8"
+
+  relationships:
+    - from: clients
+      to: api_gateway
+      label: "HTTPS"
+    
+    - from: api_gateway
+      to: auth_service
+      label: "Verify Token"
+    
+    - from: api_gateway
+      to: product_service
+      label: "Product Queries"
+    
+    - from: api_gateway
+      to: order_service
+      label: "Order Operations"
+    
+    - from: order_service
+      to: payment_service
+      label: "Process Payment"
+    
+    - from: payment_service
+      to: external_payment
+      label: "API Call"
+    
+    - from: product_service
+      to: cache
+      label: "Cache Lookup"
+    
+    - from: cache
+      to: product_db
+      label: "Cache Miss"
+    
+    - from: product_service
+      to: product_db
+      label: "Direct Query"
+    
+    - from: order_service
+      to: order_db
+      label: "Store Order"
+    
+    - from: auth_service
+      to: product_db
+      label: "User Validation"
+      bypass: true
+      style: dashed
+
+  annotations:
+    - id: PERF1
+      text: "Implement Redis caching for frequently accessed products"
+      type: performance
+    
+    - id: SEC1
+      text: "JWT tokens with 15-minute expiration"
+      type: security
+    
+    - id: REL1
+      text: "Circuit breaker for external payment gateway"
+      type: reliability
+    
+    - id: SCALE1
+      text: "Horizontal scaling: stateless microservices"
+      type: scalability

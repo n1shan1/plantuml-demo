@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Diagram Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        textarea, select, input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            resize: vertical;
+        }
+
+        textarea {
+            flex: 1;
+            min-height: 300px;
+            line-height: 1.5;
+            tab-size: 2;
+        }
+
+        textarea:focus, select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .format-options {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .checkboxes {
+            display: flex;
+            gap: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .viewer-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .diagram-container {
+            flex: 1;
+            background: #f9f9f9;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .diagram-container img, .diagram-container svg {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .placeholder {
+            color: #999;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .error-box {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #c53030;
+            margin: 10px 0;
+        }
+
+        .success-box {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #22543d;
+            margin: 10px 0;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #667eea;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .metadata {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .metadata-item {
+            display: flex;
+            gap: 5px;
+        }
+
+        .metadata-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 70px;
+        }
+
+        .metadata-value {
+            color: #333;
+        }
+
+        .templates {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .template-btn {
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            border-bottom: 1px solid #ddd;
+            margin: -20px -20px 0 -20px;
+            padding: 0 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-x: auto;
+            word-break: break-all;
+        }
+
+        .responsive-container {
+            display: contents;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .panel {
+                height: auto;
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- YAML Editor Panel -->
+        <div class="panel">
+            <div class="header">
+                <h2>📝 YAML Editor</h2>
+                <div class="header-buttons">
+                    <button class="btn btn-secondary btn-small" onclick="loadTemplate('simple')">Simple</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadTemplate('ecommerce')">E-Commerce</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadTemplate('order')">Order</button>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="editor">
+                    <div class="form-group">
+                        <label>System Architecture Definition (YAML)</label>
+                        <textarea id="yamlInput" placeholder="Paste or write your YAML here..."></textarea>
+                    </div>
+
+                    <div class="format-options">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Output Format</label>
+                            <select id="formatSelect">
+                                <option value="png">PNG (Raster)</option>
+                                <option value="svg">SVG (Vector)</option>
+                            </select>
+                        </div>
+
+                        <div class="checkboxes" style="margin-top: 22px;">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="returnBase64" checked>
+                                <label for="returnBase64" style="margin: 0; cursor: pointer;">Base64</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="returnPlantUML">
+                                <label for="returnPlantUML" style="margin: 0; cursor: pointer;">Show Code</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success" onclick="generateDiagram()" style="width: 100%; padding: 12px;">
+                        ✨ Generate Diagram
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagram Viewer Panel -->
+        <div class="panel">
+            <div class="header">
+                <h2>🎨 Diagram Preview</h2>
+                <div class="header-buttons">
+                    <button class="btn btn-secondary btn-small" onclick="downloadDiagram()">⬇️ Download</button>
+                    <button class="btn btn-secondary btn-small" onclick="copySVG()">📋 Copy</button>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab('diagram')">Diagram</button>
+                    <button class="tab-btn" onclick="switchTab('code')">PlantUML Code</button>
+                    <button class="tab-btn" onclick="switchTab('info')">Info</button>
+                </div>
+
+                <!-- Diagram Tab -->
+                <div id="diagramTab" class="tab-content active">
+                    <div class="viewer">
+                        <div class="diagram-container" id="diagramContainer">
+                            <div class="placeholder">
+                                <p>👈 Write YAML and click <strong>Generate Diagram</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Tab -->
+                <div id="codeTab" class="tab-content">
+                    <div class="viewer">
+                        <div id="codeContainer" class="code-block" style="flex: 1; overflow-y: auto;">
+                            <p style="color: #999;">PlantUML code will appear here...</p>
+                        </div>
+                        <button class="btn btn-secondary" onclick="copyCode()" style="width: 100%; margin-top: 10px;">
+                            📋 Copy Code
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Tab -->
+                <div id="infoTab" class="tab-content">
+                    <div class="viewer">
+                        <div id="infoContainer">
+                            <div class="info-box">
+                                <p>No diagram generated yet. Create your first architecture diagram!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api/diagram';
+        let currentDiagramData = null;
+
+        // Template configs
+        const templates = {
+            simple: `system:
+  name: "Simple Web App"
+  components:
+    - id: clients
+      type: external
+      label: "Web Browser"
+    - id: server
+      type: layer
+      label: "Web Server"
+    - id: db
+      type: database
+      label: "Database"
+  relationships:
+    - from: clients
+      to: server
+      label: "HTTP"
+    - from: server
+      to: db
+      label: "SQL"`,
+
+            ecommerce: `system:
+  name: "E-Commerce Platform"
+  components:
+    - id: clients
+      type: external
+      label: "Web & Mobile Clients"
+    - id: gateway
+      type: layer
+      label: "API Gateway"
+    - id: auth
+      type: security
+      label: "Authentication"
+    - id: products
+      type: processing
+      label: "Product Service"
+    - id: orders
+      type: processing
+      label: "Order Service"
+    - id: cache
+      type: service
+      label: "Redis Cache"
+    - id: db
+      type: database
+      label: "PostgreSQL"
+  relationships:
+    - from: clients
+      to: gateway
+      label: "HTTPS"
+    - from: gateway
+      to: auth
+    - from: gateway
+      to: products
+    - from: gateway
+      to: orders
+    - from: products
+      to: cache
+    - from: orders
+      to: cache
+    - from: products
+      to: db
+    - from: orders
+      to: db
+    - from: auth
+      to: db
+      bypass: true
+      style: dashed`,
+
+            order: `system:
+  name: "Order Management System"
+  components:
+    - id: web
+      type: external
+      label: "Web Client"
+    - id: mobile
+      type: external
+      label: "Mobile App"
+    - id: controller
+      type: layer
+      label: "REST Controller"
+    - id: auth
+      type: security
+      label: "Authorization"
+    - id: business
+      type: processing
+      label: "Business Logic"
+    - id: db_access
+      type: data_access
+      label: "Data Access"
+    - id: order_db
+      type: database
+      label: "Order DB"
+    - id: customer_db
+      type: database
+      label: "Customer DB"
+  relationships:
+    - from: web
+      to: controller
+    - from: mobile
+      to: controller
+    - from: controller
+      to: auth
+    - from: auth
+      to: business
+    - from: business
+      to: db_access
+    - from: db_access
+      to: order_db
+    - from: db_access
+      to: customer_db
+    - from: auth
+      to: customer_db
+      bypass: true
+      style: dashed
+  annotations:
+    - id: P1
+      text: "Bypass for performance"
+    - id: S1
+      text: "JWT authentication"
+`
+        };
+
+        function loadTemplate(name) {
+            document.getElementById('yamlInput').value = templates[name] || '';
+            generateDiagram();
+        }
+
+        async function generateDiagram() {
+            const yamlContent = document.getElementById('yamlInput').value;
+            const format = document.getElementById('formatSelect').value;
+            const returnBase64 = document.getElementById('returnBase64').checked;
+            const returnPlantUML = document.getElementById('returnPlantUML').checked;
+
+            if (!yamlContent.trim()) {
+                showError('Please enter YAML content');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_URL}/generate-diagram`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        yamlContent,
+                        format,
+                        returnBase64,
+                        returnPlantUML
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentDiagramData = data;
+                    displayDiagram(data);
+                    showSuccess(`Generated in ${data.generationTimeMs}ms`);
+                } else {
+                    showError(data.message || 'Failed to generate diagram');
+                }
+            } catch (error) {
+                // CORS issue - try direct binary download
+                console.log('Direct rendering for', format);
+                const response = await fetch(`${API_URL}/generate-diagram`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        yamlContent,
+                        format,
+                        returnPlantUML
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    displayBinaryDiagram(url, format);
+                    currentDiagramData = { format, url };
+                } else {
+                    showError(`Error: ${error.message}`);
+                }
+            }
+        }
+
+        function displayDiagram(data) {
+            const container = document.getElementById('diagramContainer');
+            container.innerHTML = '';
+
+            if (data.diagramBase64) {
+                const mimeType = data.format === 'svg' ? 'image/svg+xml' : 'image/png';
+                const img = document.createElement('img');
+                img.src = `data:${mimeType};base64,${data.diagramBase64}`;
+                img.style.cursor = 'zoom-in';
+                img.onclick = () => fullscreenDiagram(img.src);
+                container.appendChild(img);
+            }
+
+            if (data.plantUMLCode) {
+                document.getElementById('codeContainer').textContent = data.plantUMLCode;
+            }
+
+            updateMetadata(data);
+        }
+
+        function displayBinaryDiagram(url, format) {
+            const container = document.getElementById('diagramContainer');
+            container.innerHTML = '';
+
+            if (format === 'svg') {
+                fetch(url)
+                    .then(r => r.text())
+                    .then(svg => {
+                        container.innerHTML = svg;
+                    });
+            } else {
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.cursor = 'zoom-in';
+                img.onclick = () => fullscreenDiagram(url);
+                container.appendChild(img);
+            }
+        }
+
+        function updateMetadata(data) {
+            const info = `
+                <div class="success-box">✅ Generated successfully</div>
+                <div class="metadata">
+                    <div class="metadata-item">
+                        <span class="metadata-label">Format:</span>
+                        <span class="metadata-value">${data.format.toUpperCase()}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Time:</span>
+                        <span class="metadata-value">${data.generationTimeMs}ms</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Components:</span>
+                        <span class="metadata-value">${data.componentCount}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Relationships:</span>
+                        <span class="metadata-value">${data.relationshipCount}</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('infoContainer').innerHTML = info;
+        }
+
+        function showLoading() {
+            const container = document.getElementById('diagramContainer');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Generating diagram...</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('diagramContainer');
+            container.innerHTML = `<div class="error-box">${message}</div>`;
+        }
+
+        function showSuccess(message) {
+            // Optionally show toast
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function fullscreenDiagram(src) {
+            const div = document.createElement('div');
+            div.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                cursor: pointer;
+            `;
+            
+            const img = document.createElement('img');
+            img.src = src;
+            img.style.cssText = `
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+            `;
+            
+            div.appendChild(img);
+            div.onclick = () => div.remove();
+            document.body.appendChild(div);
+        }
+
+        function downloadDiagram() {
+            if (!currentDiagramData) {
+                alert('Generate a diagram first');
+                return;
+            }
+
+            const format = document.getElementById('formatSelect').value;
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `architecture-${timestamp}.${format}`;
+
+            if (currentDiagramData.diagramBase64) {
+                const mimeType = format === 'svg' ? 'image/svg+xml' : 'image/png';
+                const link = document.createElement('a');
+                link.href = `data:${mimeType};base64,${currentDiagramData.diagramBase64}`;
+                link.download = filename;
+                link.click();
+            } else if (currentDiagramData.url) {
+                const link = document.createElement('a');
+                link.href = currentDiagramData.url;
+                link.download = filename;
+                link.click();
+            }
+        }
+
+        function copyCode() {
+            const code = document.getElementById('codeContainer').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        }
+
+        function copySVG() {
+            if (!currentDiagramData?.diagramBase64) {
+                alert('Generate an SVG diagram first');
+                return;
+            }
+            navigator.clipboard.writeText(currentDiagramData.diagramBase64).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        // Load default template on page load
+        window.addEventListener('load', () => {
+            loadTemplate('simple');
+        });
+    </script>
+</body>
+</html>

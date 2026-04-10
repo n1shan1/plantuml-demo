@@ -1,0 +1,114 @@
+system:
+  name: "Order Management System"
+  description: "Layered order processing architecture with multiple flows"
+  
+  components:
+    - id: web_client
+      type: external
+      label: "Web Client"
+      color: "#E8F4F8"
+    
+    - id: mobile_client
+      type: external
+      label: "Mobile Client"
+      color: "#E8F4F8"
+    
+    - id: rest_controller
+      type: layer
+      label: "REST Controller Layer"
+      color: "#D4E6F1"
+    
+    - id: auth_layer
+      type: security
+      label: "Authorization Layer"
+      color: "#F8D7DA"
+    
+    - id: business_layer
+      type: processing
+      label: "Business Rule Processing"
+      color: "#D1ECF1"
+      multipleLayers: true
+      layers:
+        - "Order Validation"
+        - "Payment Processing"
+        - "Inventory Check"
+        - "Notification Service"
+    
+    - id: db_layer
+      type: data_access
+      label: "Database Access Layer"
+      color: "#E7D4F5"
+    
+    - id: order_db
+      type: database
+      label: "Order Database"
+      color: "#FDFFB6"
+    
+    - id: customer_db
+      type: database
+      label: "Customer Database"
+      color: "#FDFFB6"
+
+  relationships:
+    # Primary flow
+    - from: web_client
+      to: rest_controller
+      label: "Place Order"
+    
+    - from: mobile_client
+      to: rest_controller
+      label: "Place Order"
+    
+    - from: rest_controller
+      to: auth_layer
+      label: "Authenticate"
+    
+    - from: auth_layer
+      to: business_layer
+      label: "Validate & Process"
+    
+    - from: business_layer
+      to: db_layer
+      label: "Persist Order"
+    
+    - from: db_layer
+      to: order_db
+      label: "INSERT Order"
+    
+    - from: db_layer
+      to: customer_db
+      label: "UPDATE Customer"
+    
+    # Bypass flows
+    - from: auth_layer
+      to: order_db
+      label: "Direct Cache Update"
+      bypass: true
+      style: dashed
+    
+    - from: rest_controller
+      to: customer_db
+      label: "Health Check"
+      bypass: true
+      style: dotted
+
+  annotations:
+    - id: P1
+      text: "Bypass layers for authorization performance optimization"
+      type: performance
+      color: "#FFE6E6"
+    
+    - id: S1
+      text: "JWT token validation with 30-minute TTL"
+      type: security
+      color: "#FFE6E6"
+    
+    - id: R1
+      text: "Transaction rollback on payment failure"
+      type: reliability
+      color: "#E6F3FF"
+    
+    - id: MUL1 
+      text: "Multiple business logic layers for complex validations"
+      type: business
+      color: "#E6FFE6"

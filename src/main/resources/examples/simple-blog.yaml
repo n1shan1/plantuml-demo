@@ -1,0 +1,61 @@
+system:
+  name: "Simple Blog Application"
+  description: "Three-tier blog system"
+  
+  components:
+    - id: users
+      type: external
+      label: "Users (Web Browser)"
+      color: "#E8F4F8"
+    
+    - id: web_server
+      type: layer
+      label: "Web Server (Node.js)"
+      color: "#D4E6F1"
+    
+    - id: auth
+      type: security
+      label: "Session Management"
+      color: "#F8D7DA"
+    
+    - id: api
+      type: processing
+      label: "API Layer"
+      color: "#D1ECF1"
+    
+    - id: database
+      type: database
+      label: "PostgreSQL"
+      color: "#FDFFB6"
+
+  relationships:
+    - from: users
+      to: web_server
+      label: "HTTP/HTTPS"
+    
+    - from: web_server
+      to: auth
+      label: "Check Session"
+    
+    - from: auth
+      to: api
+      label: "Authorized Request"
+    
+    - from: api
+      to: database
+      label: "SQL Query"
+    
+    - from: web_server
+      to: database
+      label: "Direct Cache Query"
+      bypass: true
+      style: dashed
+
+  annotations:
+    - id: SEC1
+      text: "Session tokens stored in secure HTTP-only cookies"
+      type: security
+    
+    - id: PERF1
+      text: "Database query caching in application layer"
+      type: performance

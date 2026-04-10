@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: architecture-diagram-generator-test
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8081
+
+logging:
+  level:
+    root: WARN
+    com.architecture.diagram: DEBUG
+
+app:
+  plantuml:
+    output-format: png
